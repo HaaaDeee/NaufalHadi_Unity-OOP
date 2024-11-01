@@ -5,19 +5,22 @@ using System;
 
 public class PlayerMovement : MonoBehaviour
 {
+    //fields yang dapat diatur dari Unity
     [SerializeField] Vector2 maxSpeed;
     [SerializeField] Vector2 timeToStop;
     [SerializeField] Vector2 stopClamp;
     [SerializeField] Vector2 timeToFullSpeed;
 
+    //fields yang diatur pada program
     Vector2 moveDirection;
     Vector2 moveVelocity;
     Vector2 moveFriction;
     Vector2 stopFriction;
     Rigidbody2D rb;
-    void Start()
+    void Start() // method yang dijalankan sekali saat game dimulai
     {
         rb = GetComponent<Rigidbody2D>();
+        // menghitung moveVelocity, moveFriction, dan stopFriction menggunakan rumus yang telah ditentukan
         moveVelocity = 2 * (maxSpeed/timeToFullSpeed);
         moveFriction = -2 * new Vector2(maxSpeed.x / Mathf.Pow(timeToFullSpeed.x, 2), maxSpeed.y / Mathf.Pow(timeToFullSpeed.y, 2));
         stopFriction = -2 * new Vector2(maxSpeed.x / Mathf.Pow(timeToStop.x, 2), maxSpeed.y / Mathf.Pow(timeToStop.y, 2));
@@ -25,12 +28,16 @@ public class PlayerMovement : MonoBehaviour
 
     public void Move()
     {
+        //mengambil input dari player
         Vector2 mov_Input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+        // mengatur kecepatan player
         moveDirection = mov_Input * moveVelocity;
+        // mengatur kecepatan player agar tidak melebihi maxSpeed
         rb.velocity = new Vector2(Mathf.Clamp(rb.velocity.x + moveDirection.x + GetFriction().x, -maxSpeed.x, maxSpeed.x), Mathf.Clamp(rb.velocity.y + moveDirection.y + GetFriction().y, -maxSpeed.y, maxSpeed.y)) * 2;
         Debug.Log(GetFriction());
         Debug.Log(rb.velocity);
         Debug.Log(moveDirection);
+        // mengatur agar player berhenti saat kecepatan sudah mendekati 0
         if (Mathf.Abs(rb.velocity.x) < Mathf.Abs(stopClamp.x))
         {
             rb.velocity = new Vector2(0, rb.velocity.y);
@@ -43,7 +50,9 @@ public class PlayerMovement : MonoBehaviour
 
     public Vector2 GetFriction()
     {
+        // menghitung gaya gesekan yang diperlukan agar player berhenti
         Vector2 ret_val = Vector2.zero;
+        // menghitung gaya gesekan berdasarkan arah gerakan player
         if (moveDirection.x == 0)
         {
             ret_val.x = stopFriction.x * Mathf.Sign(rb.velocity.x);
@@ -60,6 +69,7 @@ public class PlayerMovement : MonoBehaviour
         {
             ret_val.y = moveFriction.y * Mathf.Sign(rb.velocity.y);
         }
+        // mengatur kapan nilai gaya gesekan harus 0, yaitu ketika player sedang diam, atau hasil pengurangan kecepatan player dengan gaya gesekan bernilai kurang atau lebih dari 0 tergantung keadaan player
         if (rb.velocity.x == 0 || (moveDirection.x > 0 && rb.velocity.x - ret_val.x < 0) || (moveDirection.x < 0 && rb.velocity.x - ret_val.x > 0))
         {
             ret_val.x = 0;
@@ -71,12 +81,12 @@ public class PlayerMovement : MonoBehaviour
         return ret_val;
     }
 
-    public void MoveBound()
+    public void MoveBound() // method yang masih dikosongkan
     {
 
     }
 
-    public bool isMoving()
+    public bool isMoving() // method yang mengembalikan nilai boolean apakah player sedang bergerak atau tidak
     {
         if(rb.velocity.x != 0 || rb.velocity.y != 0)
         {

@@ -4,11 +4,11 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    // Start is called before the first frame update
-    public static Player Instance { get; private set; }
-    PlayerMovement playerMovement;
-    Animator animator;
-    void Awake()
+    // fields
+    public static Player Instance { get; private set; } //singleton
+    PlayerMovement playerMovement; //field untuk menyimpan komponen PlayerMovement
+    Animator animator; //field untuk menyimpan komponen engineEffect dari GameObject EngineEffect
+    void Awake() // method untuk menyatakan singleton
     {
         if (Instance != null && Instance != this)
         {
@@ -19,11 +19,12 @@ public class Player : MonoBehaviour
             Instance = this;
         }
     }
-    void Start()
+    // method yang dijalankan sekali saat game dimulai
+    void Start() 
     {
         playerMovement = GetComponent<PlayerMovement>();
         GameObject engineEffect = GameObject.Find("EngineEffect");
-        if(engineEffect != null)
+        if(engineEffect != null) //Jika ditemukan engineEffect
         {
             animator = engineEffect.GetComponent<Animator>();
         }
@@ -33,13 +34,13 @@ public class Player : MonoBehaviour
         }
     }
 
-    // Update is called once per frame
+    // method yang dijalankan setiap frame
     void FixedUpdate()
     {
-        playerMovement.Move();
+        playerMovement.Move(); //memanggil method Move() dari playerMovement
     }
     void LateUpdate()
     {
-        animator.SetBool("IsMoving", playerMovement.isMoving());
+        animator.SetBool("IsMoving", playerMovement.isMoving()); //mengatur status IsMoving dari method isMoving() pada playerMovement
     }
 }
