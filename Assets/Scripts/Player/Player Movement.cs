@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using UnityEngine.Rendering;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -72,18 +73,22 @@ public class PlayerMovement : MonoBehaviour
         // mengatur kapan nilai gaya gesekan harus 0, yaitu ketika player sedang diam, atau hasil pengurangan kecepatan player dengan gaya gesekan bernilai kurang atau lebih dari 0 tergantung keadaan player
         if (rb.velocity.x == 0 || (moveDirection.x > 0 && rb.velocity.x - ret_val.x < 0) || (moveDirection.x < 0 && rb.velocity.x - ret_val.x > 0))
         {
-            ret_val.x = 0;
+            ret_val.x = -rb.velocity.x;
         }
         if (rb.velocity.y == 0 || (moveDirection.y > 0 && rb.velocity.y - ret_val.y < 0) || (moveDirection.y < 0 && rb.velocity.y - ret_val.y > 0))
         {
-            ret_val.y = 0;
+            ret_val.y = -rb.velocity.y;
         }
         return ret_val;
     }
 
-    public void MoveBound() // method yang masih dikosongkan
+    public void MoveBound() 
     {
-
+        float charWidth = GetComponent<PolygonCollider2D>().bounds.size.x / 2;
+        float charHeight = GetComponent<PolygonCollider2D>().bounds.size.y / 2;
+        float maxHeight = Camera.main.orthographicSize;
+        float maxWidth = Camera.main.orthographicSize * Camera.main.aspect;
+        transform.position = new Vector2(Mathf.Clamp(transform.position.x, -maxWidth + charWidth, maxWidth - charWidth), Mathf.Clamp(transform.position.y, -maxHeight + charHeight * 0.5f, maxHeight - charHeight * 2.5f));
     }
 
     public bool isMoving() // method yang mengembalikan nilai boolean apakah player sedang bergerak atau tidak

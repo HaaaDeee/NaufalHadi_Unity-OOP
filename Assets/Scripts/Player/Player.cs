@@ -41,6 +41,7 @@ public class Player : MonoBehaviour
     }
     void LateUpdate()
     {
+        playerMovement.MoveBound(); //memanggil method MoveBound() dari playerMovement
         animator.SetBool("IsMoving", playerMovement.isMoving()); //mengatur status IsMoving dari method isMoving() pada playerMovement
     }
 }
