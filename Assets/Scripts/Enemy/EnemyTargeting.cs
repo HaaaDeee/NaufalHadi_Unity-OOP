@@ -5,13 +5,13 @@ using UnityEngine;
 public class EnemyTargeting : Enemy
 {
     //fields
-    public Transform target;
+    public Vector2 target;
     public float speed;
     private Rigidbody2D rb;
     // Start is called before the first frame update
     void Start()
     {
-        target = GameObject.FindGameObjectWithTag("Player").transform;
+        speed = 2f;
         rb = GetComponent<Rigidbody2D>();
     }
 
@@ -20,8 +20,9 @@ public class EnemyTargeting : Enemy
     {
         if (target != null)
         {
-            Vector2 direction = target.position - transform.position;
-            transform.Translate(direction.normalized * speed * Time.deltaTime);
+            target = Player.Instance.transform.position;
+            transform.position = Vector2.MoveTowards(transform.position, target, speed * Time.fixedDeltaTime);
+            rb.MovePosition(transform.position);
         }
     }
 

@@ -208,9 +208,13 @@ PrefabInstance:
       propertyPath: m_Name
       value: Bullet
       objectReference: {fileID: 0}
+    - target: {fileID: 4106842885973128925, guid: 391cb8a5c114f0546affb08f09ed4c34, type: 3}
+      propertyPath: m_FlipY
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8961932914154040251, guid: 391cb8a5c114f0546affb08f09ed4c34, type: 3}
       propertyPath: m_IsTrigger
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
