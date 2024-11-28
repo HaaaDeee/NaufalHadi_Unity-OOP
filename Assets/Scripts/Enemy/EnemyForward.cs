@@ -12,6 +12,10 @@ public class EnemyForward : Enemy
     {
         rb = GetComponent<Rigidbody2D>();
     }
+    private void Awake()
+    {
+        PickRandomPositions();
+    }
 
     // Update is called once per frame
     void Update()
@@ -23,9 +27,10 @@ public class EnemyForward : Enemy
         }
     }
 
-//     public void SpawnEnemy()
-//     {
-//         Vector2 SpawnPos = new Vector2(0, 0);
-        
-//     }
+    private void PickRandomPositions()
+    {
+        Vector2 randPos = new(Random.Range(0.1f, 0.99f), 1.1f);
+
+        transform.position = Camera.main.ViewportToWorldPoint(randPos) + new Vector3(0, 0, 10);
+    }
 }

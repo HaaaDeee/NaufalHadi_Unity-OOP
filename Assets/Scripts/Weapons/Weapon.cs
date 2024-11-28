@@ -1,8 +1,6 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.Pool;
 
 public class Weapon : MonoBehaviour
@@ -19,57 +17,65 @@ public class Weapon : MonoBehaviour
     [Header("Bullet Pool")]
     private IObjectPool<Bullet> objectPool;
 
-
     private readonly bool collectionCheck = false;
     private readonly int defaultCapacity = 30;
     private readonly int maxSize = 100;
+
+
+    private float timer;
+
+
     public Transform parentTransform;
 
-    void Awake()
+
+    private void Awake()
     {
-        objectPool = new ObjectPool<Bullet>(CreateBullet, OnGet, OnReturn, OnDestroyBullet, collectionCheck, defaultCapacity, maxSize);
+        Assert.IsNotNull(bulletSpawnPoint);
+
+        objectPool = new ObjectPool<Bullet>(CreateBullet, OnGetFromPool, OnReleaseToPool, OnDestroyPooledObject, collectionCheck, defaultCapacity, maxSize);
     }
+
+
+    private void Shoot()
+    {
+        Bullet bulletObj = objectPool.Get();
+
+        bulletObj.transform.SetPositionAndRotation(bulletSpawnPoint.position, bulletSpawnPoint.rotation);
+    }
+
 
     private void FixedUpdate()
     {
-        
-        // Getting pooled object
-        if (Time.time > shootIntervalInSeconds && objectPool != null)
+        timer += Time.deltaTime;
+
+        if (timer >= shootIntervalInSeconds)
         {
-            Bullet bullet = objectPool.Get();
-            if (bullet == null)
-            {
-                return;
-            }
-            else
-            {
-                bullet.transform.SetPositionAndRotation(bulletSpawnPoint.position, bulletSpawnPoint.rotation);
-                bullet.GetComponent<Rigidbody2D>().AddForce(bullet.transform.up * bullet.bulletSpeed, ForceMode2D.Impulse);
-                bullet.Deactivate();
-                shootIntervalInSeconds = Time.time + 0.1f;
-            }
+            timer = 0;
+            Shoot();
         }
     }
+
     private Bullet CreateBullet()
     {
-        Bullet newBullet = Instantiate(bullet);
-        newBullet.ObjectPool = objectPool;
-        return newBullet;
+        Bullet instance = Instantiate(bullet);
+        instance.objectPool = objectPool;
+        instance.transform.parent = transform;
+
+        return instance;
     }
 
-    private void OnGet(Bullet pooledBullet)
+    private void OnGetFromPool(Bullet obj)
     {
-        pooledBullet.gameObject.SetActive(true);
+        obj.gameObject.SetActive(true);
     }
 
-    private void OnReturn(Bullet pooledBullet)
+    private void OnReleaseToPool(Bullet obj)
     {
-        pooledBullet.gameObject.SetActive(false);
+        obj.gameObject.SetActive(false);
     }
 
-    private void OnDestroyBullet(Bullet pooledBullet)
+    private void OnDestroyPooledObject(Bullet obj)
     {
-        Destroy(pooledBullet.gameObject);
+        Destroy(obj.gameObject);
     }
-
 }

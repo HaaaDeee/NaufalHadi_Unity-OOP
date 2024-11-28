@@ -13,6 +13,9 @@ GameObject:
   - component: {fileID: 3703590064338846049}
   - component: {fileID: 2308072942450367610}
   - component: {fileID: 7962467637473815217}
+  - component: {fileID: -652289291818455182}
+  - component: {fileID: -6632882313206302993}
+  - component: {fileID: 4161685060367143567}
   m_Layer: 0
   m_Name: EnemyHorizontal
   m_TagString: Untagged
@@ -171,4 +174,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d43045661e9a6214b9732cb0d38ba588, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefab: {fileID: 7962467637473815217}
+--- !u!114 &-652289291818455182
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6746287095073992985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b686b5702297bcd46a8ae8f5068a1dd1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  maxHealth: 30
+--- !u!114 &-6632882313206302993
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6746287095073992985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 804e36fafbac7b0478ebe196025f7dda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  health: {fileID: -652289291818455182}
+  OnHitboxCollide:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &4161685060367143567
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6746287095073992985}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31832d6c1fb077345b7e82374f544a95, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bullet: {fileID: 0}
+  damage: 10

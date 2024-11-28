@@ -6,100 +6,154 @@ using UnityEngine.Rendering;
 
 public class PlayerMovement : MonoBehaviour
 {
-    //fields yang dapat diatur dari Unity
-    [SerializeField] Vector2 maxSpeed;
-    [SerializeField] Vector2 timeToStop;
-    [SerializeField] Vector2 stopClamp;
-    [SerializeField] Vector2 timeToFullSpeed;
+    [Header("Movement With Time")]
+    [SerializeField] Vector2 maxSpeed = new(10f, 10f);
+    [SerializeField] Vector2 timeToFullSpeed = new(2f, 2f);
+    [SerializeField] Vector2 timeToStop = new(2.5f, 2.5f);
+    [SerializeField] Vector2 stopClamp = new(2.5f, 2.5f);
 
-    //fields yang diatur pada program
+
+    [Header("Movement Calculation")]
     Vector2 moveDirection;
     Vector2 moveVelocity;
     Vector2 moveFriction;
     Vector2 stopFriction;
+    Vector2 ppos;
+
+
+    [Header("Player Components")]
     Rigidbody2D rb;
-    void Start() // method yang dijalankan sekali saat game dimulai
+
+    void Start()
     {
         rb = GetComponent<Rigidbody2D>();
-        // menghitung moveVelocity, moveFriction, dan stopFriction menggunakan rumus yang telah ditentukan
-        moveVelocity = 2 * (maxSpeed/timeToFullSpeed);
-        moveFriction = -2 * new Vector2(maxSpeed.x / Mathf.Pow(timeToFullSpeed.x, 2), maxSpeed.y / Mathf.Pow(timeToFullSpeed.y, 2));
-        stopFriction = -2 * new Vector2(maxSpeed.x / Mathf.Pow(timeToStop.x, 2), maxSpeed.y / Mathf.Pow(timeToStop.y, 2));
+
+        /* 
+        
+            This calculation is derived from physics 2d motion and I got this from:
+            https://www.youtube.com/watch?v=hG9SzQxaCm8&t=0s
+        
+         */
+        moveVelocity = 2.0f * maxSpeed / timeToFullSpeed;
+        moveFriction = -2.0f * maxSpeed / (timeToFullSpeed * timeToFullSpeed);
+        stopFriction = -2.0f * maxSpeed / (timeToStop * timeToStop);
     }
 
     public void Move()
     {
-        //mengambil input dari player
-        Vector2 mov_Input = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
-        // mengatur kecepatan player
-        moveDirection = mov_Input * moveVelocity;
-        // mengatur kecepatan player agar tidak melebihi maxSpeed
-        rb.velocity = new Vector2(Mathf.Clamp(rb.velocity.x + moveDirection.x + GetFriction().x, -maxSpeed.x, maxSpeed.x), Mathf.Clamp(rb.velocity.y + moveDirection.y + GetFriction().y, -maxSpeed.y, maxSpeed.y)) * 2;
-        Debug.Log(GetFriction());
-        Debug.Log(rb.velocity);
-        Debug.Log(moveDirection);
-        // mengatur agar player berhenti saat kecepatan sudah mendekati 0
-        if (Mathf.Abs(rb.velocity.x) < Mathf.Abs(stopClamp.x))
-        {
-            rb.velocity = new Vector2(0, rb.velocity.y);
-        }
-        if (Mathf.Abs(rb.velocity.y) < Mathf.Abs(stopClamp.y))
-        {
-            rb.velocity = new Vector2(rb.velocity.x, 0);
-        }
+        /* 
+            Get input from player's keyboard to determine which direction the player wants to move.
+                - RAW is used here because I want the input to be either -1, 0, or 1 for both axis.
+                - And the vector is normalized so that the diagonal movement doesnt have a different movement speed from linear movement. You can search this on Youtube which explains the concept better (2D dropdown fix diagonal movement).
+         */
+        moveDirection = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical")).normalized;
+
+        // The player's velocity is being added overtime and directed by moveDirection above.
+        rb.velocity += moveVelocity * Time.deltaTime * moveDirection;
+
+        // Limit the player's velocity so that it will only reach maxSpeed and not further.
+        rb.velocity = new(Mathf.Clamp(rb.velocity.x, -maxSpeed.x, maxSpeed.x), Mathf.Clamp(rb.velocity.y, -maxSpeed.y, maxSpeed.y));
+
+        // This represents DECCELERATION using friction, when an object move
+        // the force of the motion will have a friction that oppose the move force.
+        // The value of the friction is determined using a function below. 
+        rb.velocity -= GetFriction() * Time.deltaTime;
+
+        // Both of these if are used to clamp the stop movement, if the
+        // velocity is less than stopClamp, then just stop the player instead of
+        // waiting for the friction to do it.
+        // 
+        // Other condition was related to moveBound(), we dont want any velocity
+        // if the player already reach the screen bound
+        if (Math.Abs(rb.velocity.x) < stopClamp.x && moveDirection.x == 0 || moveDirection.x > -0 && ppos.x >= 0.99f || moveDirection.x < 0 && ppos.x <= 0.01f)
+            rb.velocity = new(0, rb.velocity.y);
+
+        if (Math.Abs(rb.velocity.y) < stopClamp.y && moveDirection.y == 0 || moveDirection.y > -0 && ppos.y >= 0.95f || moveDirection.y < 0 && ppos.y <= -0.01f)
+            rb.velocity = new(rb.velocity.x, 0);
     }
 
     public Vector2 GetFriction()
     {
-        // menghitung gaya gesekan yang diperlukan agar player berhenti
-        Vector2 ret_val = Vector2.zero;
-        // menghitung gaya gesekan berdasarkan arah gerakan player
-        if (moveDirection.x == 0)
-        {
-            ret_val.x = stopFriction.x * Mathf.Sign(rb.velocity.x);
-        }
+        Vector2 totalFriction = Vector2.zero;
+
+        // The friction is determined based on where the direction of the player
+        // wants to go.
+
+        // If the direction is positive, then the friction must be negative
+        if (moveDirection.x > 0)
+            totalFriction.x = moveFriction.x;
+
+        // If the direction is negative, then the friction must be positive
+        else if (moveDirection.x < 0)
+            totalFriction.x = -moveFriction.x;
+
+        // If the player doesnt want to move, but
+        // the player is still moving
+        // that means the player wants to stop
+        // And we also check the movement (velocity) if its on negative or positive direction
+
+        // So we check if direction is 0 (player not pressing input and velocity is not added)
+        // and the velocity is positive (user going forward)
+        // that means the friction needs to be negative
+
+        // This logic is different from above because we use player's velocity
+        // and the player's velocity is no longer being added, so we need to
+        // actually match the player's velocity
+        else if (moveDirection.x == 0 && rb.velocity.x > 0)
+            totalFriction.x = -stopFriction.x;
+        else if (moveDirection.x == 0 && rb.velocity.x < 0)
+            totalFriction.x = stopFriction.x;
         else
-        {
-            ret_val.x = moveFriction.x * Mathf.Sign(rb.velocity.x);
-        }
-        if (moveDirection.y == 0)
-        {
-            ret_val.y = stopFriction.y * Mathf.Sign(rb.velocity.y);
-        }
+            totalFriction.x = 0;
+
+        // The logic for y axis (vertical) is the same as above (x axis or horizontal)
+        if (moveDirection.y > 0)
+            totalFriction.y = moveFriction.y;
+        else if (moveDirection.y < 0)
+            totalFriction.y = -moveFriction.y;
+        else if (moveDirection.y == 0 && rb.velocity.y > 0)
+            totalFriction.y = -stopFriction.y;
+        else if (moveDirection.y == 0 && rb.velocity.y < 0)
+            totalFriction.y = stopFriction.y;
         else
-        {
-            ret_val.y = moveFriction.y * Mathf.Sign(rb.velocity.y);
-        }
-        // mengatur kapan nilai gaya gesekan harus 0, yaitu ketika player sedang diam, atau hasil pengurangan kecepatan player dengan gaya gesekan bernilai kurang atau lebih dari 0 tergantung keadaan player
-        if (rb.velocity.x == 0 || (moveDirection.x > 0 && rb.velocity.x - ret_val.x < 0) || (moveDirection.x < 0 && rb.velocity.x - ret_val.x > 0))
-        {
-            ret_val.x = -rb.velocity.x;
-        }
-        if (rb.velocity.y == 0 || (moveDirection.y > 0 && rb.velocity.y - ret_val.y < 0) || (moveDirection.y < 0 && rb.velocity.y - ret_val.y > 0))
-        {
-            ret_val.y = -rb.velocity.y;
-        }
-        return ret_val;
+            totalFriction.y = 0;
+
+        return totalFriction;
     }
 
-    public void MoveBound() 
+    /* 
+    
+        Limit the player's position so that the player doesnt go
+        off screen.
+
+        the worldToViewportPoint is used to transform the player's in the game
+        position into a viewport point which is a number between 0 and 1
+        that relative to the screen or camera.
+
+        If the number is greater than 1 that means user is offscreen to the right or up
+        If the number is less than 0 that means user is offscreen to the left or bottom
+
+     */
+    public void MoveBound()
     {
-        float charWidth = GetComponent<PolygonCollider2D>().bounds.size.x / 2;
-        float charHeight = GetComponent<PolygonCollider2D>().bounds.size.y / 2;
-        float maxHeight = Camera.main.orthographicSize;
-        float maxWidth = Camera.main.orthographicSize * Camera.main.aspect;
-        transform.position = new Vector2(Mathf.Clamp(transform.position.x, -maxWidth + charWidth, maxWidth - charWidth), Mathf.Clamp(transform.position.y, -maxHeight + charHeight * 0.5f, maxHeight - charHeight * 2.5f));
+        // Converting player's position to 0 and 1
+        // relative to camera
+        ppos = Camera.main.WorldToViewportPoint(transform.position);
+
+        // limit the position so that it doesnt go off screen
+        ppos.x = Mathf.Clamp(ppos.x, 0.01f, 0.99f);
+        ppos.y = Mathf.Clamp(ppos.y, -0.01f, 0.95f);
+
+        // Set the player's position
+        // With the converted back (viewport to world)
+        transform.position = Camera.main.ViewportToWorldPoint(ppos) + new Vector3(0, 0, 10);
     }
 
-    public bool isMoving() // method yang mengembalikan nilai boolean apakah player sedang bergerak atau tidak
+    public bool IsMoving()
     {
-        if(rb.velocity.x != 0 || rb.velocity.y != 0)
-        {
+        if (moveDirection.magnitude != 0)
             return true;
-        }
-        else
-        {
-            return false;
-        }
+
+        return false;
     }
 }

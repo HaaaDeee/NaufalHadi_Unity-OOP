@@ -1,20 +1,30 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 public class Enemy : MonoBehaviour
 {
     //fields
-    private int level;
-    // Start is called before the first frame update
-    void Start()
+    [SerializeField] protected int level;
+
+    public UnityEvent enemyKilledEvent;
+
+    private void Start()
     {
-        
+        enemyKilledEvent ??= new UnityEvent();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void SetLevel(int level)
     {
-        
+        this.level = level;
+    }
+
+    public int GetLevel()
+    {
+        return level;
+    }
+
+    private void OnDestroy()
+    {
+        enemyKilledEvent.Invoke();
     }
 }

@@ -4,44 +4,49 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    // fields
-    public static Player Instance { get; private set; } //singleton
-    PlayerMovement playerMovement; //field untuk menyimpan komponen PlayerMovement
-    Animator animator; //field untuk menyimpan komponen engineEffect dari GameObject EngineEffect
-    void Awake() // method untuk menyatakan singleton
+    // This for getting the instace of Player Singleton
+    public static Player Instance { get; private set; }
+
+    // Getting the PlayerMovement methods
+    PlayerMovement playerMovement;
+    // Animator
+    Animator animator;
+
+
+    // Key for Singleton
+    void Awake()
     {
         if (Instance != null && Instance != this)
         {
             Destroy(this);
+            return;
         }
-        else
-        {
-            Instance = this;
-        }
-    }
-    // method yang dijalankan sekali saat game dimulai
-    void Start() 
-    {
-        playerMovement = GetComponent<PlayerMovement>();
-        GameObject engineEffect = GameObject.Find("EngineEffect");
-        if(engineEffect != null) //Jika ditemukan engineEffect
-        {
-            animator = engineEffect.GetComponent<Animator>();
-        }
-        else
-        {
-            Debug.LogError("EngineEffect not found");
-        }
+
+        Instance = this;
+
+        DontDestroyOnLoad(gameObject);
     }
 
-    // method yang dijalankan setiap frame
+    // Getting Component
+    void Start()
+    {
+        // Get PlayerMovement components
+        playerMovement = GetComponent<PlayerMovement>();
+
+        // Get Animator components
+        animator = GameObject.Find("EngineEffects").GetComponent<Animator>();
+    }
+
+    // Using FixedUpdate to Move because of physics
     void FixedUpdate()
     {
-        playerMovement.Move(); //memanggil method Move() dari playerMovement
+        playerMovement.Move();
     }
+
+    // LateUpdate for animation related
     void LateUpdate()
     {
-        playerMovement.MoveBound(); //memanggil method MoveBound() dari playerMovement
-        animator.SetBool("IsMoving", playerMovement.isMoving()); //mengatur status IsMoving dari method isMoving() pada playerMovement
+        playerMovement.MoveBound();
+        animator.SetBool("IsMoving", playerMovement.IsMoving());
     }
 }

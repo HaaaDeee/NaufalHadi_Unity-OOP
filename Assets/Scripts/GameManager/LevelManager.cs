@@ -7,25 +7,15 @@ using UnityEngine.SceneManagement;
 
 public class LevelManager : MonoBehaviour
 {
-    public static LevelManager Instance { get; private set; }
     [SerializeField] Animator animator;
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
-        animator.SetTrigger("End");
+        animator.enabled = false;
     }
 
     IEnumerator LoadSceneAsync(string sceneName)
     {
-        animator.SetTrigger("Start");
+        animator.enabled = true;
         yield return new WaitForSeconds(1f);
         SceneManager.LoadSceneAsync(sceneName);
         Player.Instance.transform.position = new(0, -4.5f);

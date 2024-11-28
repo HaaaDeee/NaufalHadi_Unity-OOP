@@ -5,8 +5,8 @@ using UnityEngine;
 
 public class Portal : MonoBehaviour
 {
-    [SerializeField] float speed;
-    [SerializeField] float rotateSpeed;
+    [SerializeField] float speed = 0.15f;
+    [SerializeField] float rotateSpeed = 5.0f;
     Vector2 newPosition;
     Weapon weapon;
     SpriteRenderer spriteRenderer;
@@ -16,8 +16,6 @@ public class Portal : MonoBehaviour
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         circleCollider2D = GetComponent<CircleCollider2D>();
-        spriteRenderer.enabled = false;
-        circleCollider2D.enabled = false;
         ChangePosition();
     }
 
@@ -28,15 +26,18 @@ public class Portal : MonoBehaviour
         {
             spriteRenderer.enabled = true;
             circleCollider2D.enabled = true;
+            transform.position = Vector2.MoveTowards(transform.position, newPosition, speed * Time.deltaTime);
+            transform.Rotate(Vector3.forward * rotateSpeed * Time.deltaTime);
         }
-        if (Vector2.Distance(transform.position, newPosition) > 0.5f)
-            {
-                transform.position = Vector2.MoveTowards(transform.position, newPosition, speed * Time.deltaTime);
-            }
-            else
-            {
-                ChangePosition();
-            }
+        else
+        {
+            spriteRenderer.enabled = false;
+            circleCollider2D.enabled = false;
+        }
+        if (Vector2.Distance(transform.position, newPosition) < 0.5f)
+        {
+            ChangePosition();
+        }
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -57,6 +58,6 @@ public class Portal : MonoBehaviour
 
     void ChangePosition()
     {
-        newPosition = new Vector2(Random.Range(-1, 1), Random.Range(-1, 1));
+        newPosition = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f));
     }
 }
